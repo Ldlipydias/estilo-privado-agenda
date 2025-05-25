@@ -26,6 +26,16 @@ export interface Visit {
   notes?: string;
 }
 
+export interface Appointment {
+  id: string;
+  clientId: string;
+  serviceId: string;
+  date: string;
+  time: string;
+  status: "scheduled" | "completed" | "cancelled";
+  notes?: string;
+}
+
 export interface Payment {
   id: string;
   visitId: string;

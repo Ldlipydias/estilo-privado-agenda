@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,9 +65,9 @@ const AppointmentsSection = ({
     if (appointment && service) {
       onUpdateAppointment(appointmentId, { status: "completed" });
       
-      // Adicionar pagamento
+      // Adicionar pagamento usando visitId (mesmo ID do appointment para compatibilidade)
       onAddPayment({
-        appointmentId,
+        visitId: appointmentId,
         amount: parseFloat(paymentData.amount) || service.price,
         method: paymentData.method,
         date: new Date().toISOString()
@@ -95,7 +94,7 @@ const AppointmentsSection = ({
   };
 
   const getPayment = (appointmentId: string) => {
-    return payments.find(p => p.appointmentId === appointmentId);
+    return payments.find(p => p.visitId === appointmentId);
   };
 
   const sortedAppointments = appointments.sort((a, b) => {
