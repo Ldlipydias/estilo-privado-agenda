@@ -43,7 +43,11 @@ const VisitsSection = ({
 
   const handleAddVisit = () => {
     if (newVisit.clientId && newVisit.serviceId && newVisit.date && newVisit.time) {
+      // Gerar ID único para sincronizar visit e payment
+      const visitId = Date.now().toString();
+      
       const visitData = {
+        id: visitId,
         clientId: newVisit.clientId,
         serviceId: newVisit.serviceId,
         date: newVisit.date,
@@ -51,21 +55,20 @@ const VisitsSection = ({
         notes: newVisit.notes
       };
       
-      // Gerar ID único para sincronizar visit e payment
-      const visitId = Date.now().toString();
-      
       // Adicionar visit com ID específico
-      onAddVisit({ ...visitData, id: visitId } as any);
+      onAddVisit(visitData as any);
       
-      // Adicionar pagamento com o mesmo ID
+      // Criar data do pagamento baseada na data e hora do atendimento
+      const visitDateTime = new Date(`${newVisit.date}T${newVisit.time}`);
       const service = services.find(s => s.id === newVisit.serviceId);
       const paymentAmount = newVisit.amount || service?.price || 0;
       
+      // Adicionar pagamento com a mesma data do atendimento
       onAddPayment({
         visitId: visitId,
         amount: paymentAmount,
         method: newVisit.paymentMethod,
-        date: new Date().toISOString()
+        date: visitDateTime.toISOString()
       });
 
       setNewVisit({
