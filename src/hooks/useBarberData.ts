@@ -131,10 +131,10 @@ export const useBarberData = () => {
   };
 
   // Funções para visitas (atendimentos realizados)
-  const addVisit = (visit: Omit<Visit, "id">) => {
+  const addVisit = (visit: Omit<Visit, "id"> | (Omit<Visit, "id"> & { id: string })) => {
     const newVisit: Visit = {
       ...visit,
-      id: Date.now().toString()
+      id: 'id' in visit && visit.id ? visit.id : Date.now().toString()
     };
     setVisits(prev => [...prev, newVisit]);
   };

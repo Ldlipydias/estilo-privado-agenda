@@ -51,21 +51,22 @@ const VisitsSection = ({
         notes: newVisit.notes
       };
       
-      onAddVisit(visitData);
+      // Gerar ID único para sincronizar visit e payment
+      const visitId = Date.now().toString();
       
-      // Adicionar pagamento automaticamente
+      // Adicionar visit com ID específico
+      onAddVisit({ ...visitData, id: visitId } as any);
+      
+      // Adicionar pagamento com o mesmo ID
       const service = services.find(s => s.id === newVisit.serviceId);
       const paymentAmount = newVisit.amount || service?.price || 0;
       
-      setTimeout(() => {
-        const visitId = Date.now().toString(); // Simula o ID que seria gerado
-        onAddPayment({
-          visitId: visitId,
-          amount: paymentAmount,
-          method: newVisit.paymentMethod,
-          date: new Date().toISOString()
-        });
-      }, 100);
+      onAddPayment({
+        visitId: visitId,
+        amount: paymentAmount,
+        method: newVisit.paymentMethod,
+        date: new Date().toISOString()
+      });
 
       setNewVisit({
         clientId: "",
