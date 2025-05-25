@@ -45,6 +45,8 @@ const ClientsSection = ({
   };
 
   const getClientHistory = (clientId: string) => {
+    if (!visits || !services || !payments) return [];
+    
     return visits
       .filter(visit => visit.clientId === clientId)
       .map(visit => {
@@ -56,6 +58,8 @@ const ClientsSection = ({
   };
 
   const getTotalSpent = (clientId: string) => {
+    if (!visits || !payments) return 0;
+    
     const clientPayments = visits
       .filter(visit => visit.clientId === clientId)
       .map(visit => payments.find(p => p.visitId === visit.id))
@@ -65,6 +69,7 @@ const ClientsSection = ({
   };
 
   const getVisitCount = (clientId: string) => {
+    if (!visits) return 0;
     return visits.filter(visit => visit.clientId === clientId).length;
   };
 
@@ -76,6 +81,12 @@ const ClientsSection = ({
     onUpdatePayment(paymentId, { method: newMethod as Payment["method"] });
     setEditingPayment(null);
   };
+
+  // Ensure all arrays are defined before rendering
+  const safeClients = clients || [];
+  const safeVisits = visits || [];
+  const safePayments = payments || [];
+  const safeServices = services || [];
 
   return (
     <div className="space-y-6">
@@ -135,7 +146,7 @@ const ClientsSection = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {clients.map(client => {
+        {safeClients.map(client => {
           const totalSpent = getTotalSpent(client.id);
           const visitCount = getVisitCount(client.id);
 
@@ -177,7 +188,7 @@ const ClientsSection = ({
         })}
       </div>
 
-      {clients.length === 0 && (
+      {safeClients.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
             <User className="h-12 w-12 mx-auto text-gray-400 mb-4" />
