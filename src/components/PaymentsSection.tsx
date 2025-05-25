@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { CreditCard, DollarSign, Calendar, TrendingUp, Edit, Eye, EyeOff } from "lucide-react";
-import { Payment, Appointment, Client, Service } from "@/hooks/useBarberData";
+import { Payment, Visit, Client, Service } from "@/hooks/useBarberData";
 
 interface PaymentsSectionProps {
   payments: Payment[];
-  appointments: Appointment[];
+  visits: Visit[];
   clients: Client[];
   services: Service[];
   onUpdatePayment: (id: string, updates: Partial<Payment>) => void;
@@ -20,7 +19,7 @@ interface PaymentsSectionProps {
 
 const PaymentsSection = ({ 
   payments, 
-  appointments, 
+  visits, 
   clients, 
   services, 
   onUpdatePayment,
@@ -31,14 +30,14 @@ const PaymentsSection = ({
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [localPrivacyMode, setLocalPrivacyMode] = useState(privacyMode);
 
-  const getAppointmentDetails = (appointmentId: string) => {
-    const appointment = appointments.find(apt => apt.id === appointmentId);
-    if (!appointment) return { client: null, service: null, appointment: null };
+  const getVisitDetails = (visitId: string) => {
+    const visit = visits.find(v => v.id === visitId);
+    if (!visit) return { client: null, service: null, visit: null };
     
-    const client = clients.find(c => c.id === appointment.clientId);
-    const service = services.find(s => s.id === appointment.serviceId);
+    const client = clients.find(c => c.id === visit.clientId);
+    const service = services.find(s => s.id === visit.serviceId);
     
-    return { client, service, appointment };
+    return { client, service, visit };
   };
 
   const formatCurrency = (value: number) => {
@@ -215,7 +214,7 @@ const PaymentsSection = ({
       {/* Lista de pagamentos */}
       <div className="space-y-3">
         {filteredPayments.map(payment => {
-          const { client, service, appointment } = getAppointmentDetails(payment.appointmentId);
+          const { client, service, visit } = getVisitDetails(payment.visitId);
 
           return (
             <Card key={payment.id} className="hover:shadow-md transition-shadow">
@@ -232,10 +231,10 @@ const PaymentsSection = ({
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <Calendar className="h-4 w-4" />
                       <span>{new Date(payment.date).toLocaleDateString('pt-BR')}</span>
-                      {appointment && (
+                      {visit && (
                         <>
                           <span>•</span>
-                          <span>{appointment.time}</span>
+                          <span>{visit.time}</span>
                         </>
                       )}
                     </div>
@@ -264,7 +263,7 @@ const PaymentsSection = ({
           <CardContent className="text-center py-12">
             <CreditCard className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <p className="text-gray-500">Nenhum pagamento encontrado.</p>
-            <p className="text-sm text-gray-400">Ajuste os filtros ou finalize alguns atendimentos.</p>
+            <p className="text-sm text-gray-400">Registre alguns atendimentos para ver os pagamentos.</p>
           </CardContent>
         </Card>
       )}

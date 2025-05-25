@@ -17,19 +17,18 @@ export interface Service {
   description?: string;
 }
 
-export interface Appointment {
+export interface Visit {
   id: string;
   clientId: string;
   serviceId: string;
   date: string;
   time: string;
-  status: "scheduled" | "completed" | "cancelled";
   notes?: string;
 }
 
 export interface Payment {
   id: string;
-  appointmentId: string;
+  visitId: string;
   amount: number;
   method: "cash" | "pix" | "credit" | "debit";
   date: string;
@@ -38,26 +37,26 @@ export interface Payment {
 const STORAGE_KEYS = {
   clients: "barber_clients",
   services: "barber_services", 
-  appointments: "barber_appointments",
+  visits: "barber_visits",
   payments: "barber_payments"
 };
 
 export const useBarberData = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [visits, setVisits] = useState<Visit[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
 
   // Carregar dados do localStorage
   useEffect(() => {
     const loadedClients = localStorage.getItem(STORAGE_KEYS.clients);
     const loadedServices = localStorage.getItem(STORAGE_KEYS.services);
-    const loadedAppointments = localStorage.getItem(STORAGE_KEYS.appointments);
+    const loadedVisits = localStorage.getItem(STORAGE_KEYS.visits);
     const loadedPayments = localStorage.getItem(STORAGE_KEYS.payments);
 
     if (loadedClients) setClients(JSON.parse(loadedClients));
     if (loadedServices) setServices(JSON.parse(loadedServices));
-    if (loadedAppointments) setAppointments(JSON.parse(loadedAppointments));
+    if (loadedVisits) setVisits(JSON.parse(loadedVisits));
     if (loadedPayments) setPayments(JSON.parse(loadedPayments));
 
     // Dados iniciais se não houver nada salvo
@@ -83,8 +82,8 @@ export const useBarberData = () => {
   }, [services]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.appointments, JSON.stringify(appointments));
-  }, [appointments]);
+    localStorage.setItem(STORAGE_KEYS.visits, JSON.stringify(visits));
+  }, [visits]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.payments, JSON.stringify(payments));
@@ -121,18 +120,18 @@ export const useBarberData = () => {
     ));
   };
 
-  // Funções para agendamentos
-  const addAppointment = (appointment: Omit<Appointment, "id">) => {
-    const newAppointment: Appointment = {
-      ...appointment,
+  // Funções para visitas (atendimentos realizados)
+  const addVisit = (visit: Omit<Visit, "id">) => {
+    const newVisit: Visit = {
+      ...visit,
       id: Date.now().toString()
     };
-    setAppointments(prev => [...prev, newAppointment]);
+    setVisits(prev => [...prev, newVisit]);
   };
 
-  const updateAppointment = (id: string, updates: Partial<Appointment>) => {
-    setAppointments(prev => prev.map(appointment => 
-      appointment.id === id ? { ...appointment, ...updates } : appointment
+  const updateVisit = (id: string, updates: Partial<Visit>) => {
+    setVisits(prev => prev.map(visit => 
+      visit.id === id ? { ...visit, ...updates } : visit
     ));
   };
 
@@ -154,14 +153,14 @@ export const useBarberData = () => {
   return {
     clients,
     services,
-    appointments,
+    visits,
     payments,
     addClient,
     updateClient,
     addService,
     updateService,
-    addAppointment,
-    updateAppointment,
+    addVisit,
+    updateVisit,
     addPayment,
     updatePayment
   };

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, EyeOff, Users, DollarSign, Calendar, TrendingUp, Scissors, CreditCard } from "lucide-react";
 import ClientsSection from "@/components/ClientsSection";
 import ServicesSection from "@/components/ServicesSection";
-import AppointmentsSection from "@/components/AppointmentsSection";
+import VisitsSection from "@/components/VisitsSection";
 import PaymentsSection from "@/components/PaymentsSection";
 import { useBarberData } from "@/hooks/useBarberData";
 
@@ -16,39 +16,39 @@ const Index = () => {
   const { 
     clients, 
     services, 
-    appointments, 
+    visits, 
     payments, 
     addClient, 
     updateClient, 
     addService, 
     updateService, 
-    addAppointment, 
-    updateAppointment,
+    addVisit, 
+    updateVisit,
     addPayment,
     updatePayment 
   } = useBarberData();
 
   // Cálculos das estatísticas
   const today = new Date().toDateString();
-  const todayAppointments = appointments.filter(apt => new Date(apt.date).toDateString() === today);
-  const todayRevenue = todayAppointments.reduce((sum, apt) => {
-    const payment = payments.find(p => p.appointmentId === apt.id);
+  const todayVisits = visits.filter(visit => new Date(visit.date).toDateString() === today);
+  const todayRevenue = todayVisits.reduce((sum, visit) => {
+    const payment = payments.find(p => p.visitId === visit.id);
     return sum + (payment?.amount || 0);
   }, 0);
 
   const thisWeekStart = new Date();
   thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
-  const weeklyAppointments = appointments.filter(apt => new Date(apt.date) >= thisWeekStart);
-  const weeklyRevenue = weeklyAppointments.reduce((sum, apt) => {
-    const payment = payments.find(p => p.appointmentId === apt.id);
+  const weeklyVisits = visits.filter(visit => new Date(visit.date) >= thisWeekStart);
+  const weeklyRevenue = weeklyVisits.reduce((sum, visit) => {
+    const payment = payments.find(p => p.visitId === visit.id);
     return sum + (payment?.amount || 0);
   }, 0);
 
   const thisMonthStart = new Date();
   thisMonthStart.setDate(1);
-  const monthlyAppointments = appointments.filter(apt => new Date(apt.date) >= thisMonthStart);
-  const monthlyRevenue = monthlyAppointments.reduce((sum, apt) => {
-    const payment = payments.find(p => p.appointmentId === apt.id);
+  const monthlyVisits = visits.filter(visit => new Date(visit.date) >= thisMonthStart);
+  const monthlyRevenue = monthlyVisits.reduce((sum, visit) => {
+    const payment = payments.find(p => p.visitId === visit.id);
     return sum + (payment?.amount || 0);
   }, 0);
 
@@ -63,7 +63,7 @@ const Index = () => {
   const renderDashboard = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Caderneta do Barbeiro</h1>
         <Button
           variant="outline"
           onClick={() => setPrivacyMode(!privacyMode)}
@@ -82,7 +82,7 @@ const Index = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-900">{formatCurrency(todayRevenue)}</div>
-            <p className="text-xs text-blue-600">Atendimentos: {formatNumber(todayAppointments.length)}</p>
+            <p className="text-xs text-blue-600">Atendimentos: {formatNumber(todayVisits.length)}</p>
           </CardContent>
         </Card>
 
@@ -93,7 +93,7 @@ const Index = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-900">{formatCurrency(weeklyRevenue)}</div>
-            <p className="text-xs text-green-600">Clientes: {formatNumber(weeklyAppointments.length)}</p>
+            <p className="text-xs text-green-600">Atendimentos: {formatNumber(weeklyVisits.length)}</p>
           </CardContent>
         </Card>
 
@@ -104,7 +104,7 @@ const Index = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-900">{formatCurrency(monthlyRevenue)}</div>
-            <p className="text-xs text-purple-600">Total de atendimentos: {formatNumber(monthlyAppointments.length)}</p>
+            <p className="text-xs text-purple-600">Total de atendimentos: {formatNumber(monthlyVisits.length)}</p>
           </CardContent>
         </Card>
 
@@ -125,41 +125,43 @@ const Index = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Próximos Atendimentos
+              Últimos Atendimentos
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {appointments
-                .filter(apt => new Date(apt.date) >= new Date())
+              {visits
+                .sort((a, b) => new Date(b.date + ' ' + b.time).getTime() - new Date(a.date + ' ' + a.time).getTime())
                 .slice(0, 5)
-                .map(apt => {
-                  const client = clients.find(c => c.id === apt.clientId);
-                  const service = services.find(s => s.id === apt.serviceId);
-                  const payment = payments.find(p => p.appointmentId === apt.id);
+                .map(visit => {
+                  const client = clients.find(c => c.id === visit.clientId);
+                  const service = services.find(s => s.id === visit.serviceId);
+                  const payment = payments.find(p => p.visitId === visit.id);
                   
                   return (
-                    <div key={apt.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div key={visit.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium">{client?.name}</p>
                         <p className="text-sm text-gray-600">{service?.name}</p>
                         <p className="text-xs text-gray-500">
-                          {new Date(apt.date).toLocaleDateString('pt-BR')} às {apt.time}
+                          {new Date(visit.date).toLocaleDateString('pt-BR')} às {visit.time}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-green-600">{formatCurrency(service?.price || 0)}</p>
+                        <p className="font-bold text-green-600">{formatCurrency(payment?.amount || service?.price || 0)}</p>
                         {payment && (
                           <Badge variant="outline" className="text-xs">
-                            {payment.method}
+                            {payment.method === "cash" ? "Dinheiro" :
+                             payment.method === "pix" ? "PIX" :
+                             payment.method === "credit" ? "Cartão Crédito" : "Cartão Débito"}
                           </Badge>
                         )}
                       </div>
                     </div>
                   );
                 })}
-              {appointments.filter(apt => new Date(apt.date) >= new Date()).length === 0 && (
-                <p className="text-gray-500 text-center py-4">Nenhum atendimento agendado</p>
+              {visits.length === 0 && (
+                <p className="text-gray-500 text-center py-4">Nenhum atendimento registrado</p>
               )}
             </div>
           </CardContent>
@@ -169,13 +171,13 @@ const Index = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Scissors className="h-5 w-5" />
-              Serviços Mais Populares
+              Serviços Mais Realizados
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {services.slice(0, 5).map(service => {
-                const serviceAppointments = appointments.filter(apt => apt.serviceId === service.id);
+                const serviceVisits = visits.filter(visit => visit.serviceId === service.id);
                 return (
                   <div key={service.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <div>
@@ -184,7 +186,7 @@ const Index = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-blue-600">{formatCurrency(service.price)}</p>
-                      <p className="text-xs text-gray-500">{serviceAppointments.length} agendamentos</p>
+                      <p className="text-xs text-gray-500">{serviceVisits.length} realizados</p>
                     </div>
                   </div>
                 );
@@ -226,8 +228,8 @@ const Index = () => {
               Serviços
             </Button>
             <Button
-              variant={activeTab === "appointments" ? "default" : "outline"}
-              onClick={() => setActiveTab("appointments")}
+              variant={activeTab === "visits" ? "default" : "outline"}
+              onClick={() => setActiveTab("visits")}
               className="flex items-center gap-2"
             >
               <Calendar className="h-4 w-4" />
@@ -249,7 +251,7 @@ const Index = () => {
           {activeTab === "clients" && (
             <ClientsSection 
               clients={clients} 
-              appointments={appointments}
+              visits={visits}
               payments={payments}
               services={services}
               onAddClient={addClient} 
@@ -265,21 +267,21 @@ const Index = () => {
               onUpdateService={updateService} 
             />
           )}
-          {activeTab === "appointments" && (
-            <AppointmentsSection 
-              appointments={appointments}
+          {activeTab === "visits" && (
+            <VisitsSection 
+              visits={visits}
               clients={clients}
               services={services}
               payments={payments}
-              onAddAppointment={addAppointment}
-              onUpdateAppointment={updateAppointment}
+              onAddVisit={addVisit}
               onAddPayment={addPayment}
+              privacyMode={privacyMode}
             />
           )}
           {activeTab === "payments" && (
             <PaymentsSection 
               payments={payments}
-              appointments={appointments}
+              visits={visits}
               clients={clients}
               services={services}
               onUpdatePayment={updatePayment}

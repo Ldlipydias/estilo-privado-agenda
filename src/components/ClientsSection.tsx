@@ -8,11 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, User, Phone, Mail, Calendar, DollarSign, Edit } from "lucide-react";
-import { Client, Appointment, Payment, Service } from "@/hooks/useBarberData";
+import { Client, Visit, Payment, Service } from "@/hooks/useBarberData";
 
 interface ClientsSectionProps {
   clients: Client[];
-  appointments: Appointment[];
+  visits: Visit[];
   payments: Payment[];
   services: Service[];
   onAddClient: (client: Omit<Client, "id" | "createdAt">) => void;
@@ -23,7 +23,7 @@ interface ClientsSectionProps {
 
 const ClientsSection = ({ 
   clients, 
-  appointments, 
+  visits, 
   payments, 
   services,
   onAddClient, 
@@ -45,23 +45,27 @@ const ClientsSection = ({
   };
 
   const getClientHistory = (clientId: string) => {
-    return appointments
-      .filter(apt => apt.clientId === clientId)
-      .map(apt => {
-        const service = services.find(s => s.id === apt.serviceId);
-        const payment = payments.find(p => p.appointmentId === apt.id);
-        return { appointment: apt, service, payment };
+    return visits
+      .filter(visit => visit.clientId === clientId)
+      .map(visit => {
+        const service = services.find(s => s.id === visit.serviceId);
+        const payment = payments.find(p => p.visitId === visit.id);
+        return { visit, service, payment };
       })
-      .sort((a, b) => new Date(b.appointment.date).getTime() - new Date(a.appointment.date).getTime());
+      .sort((a, b) => new Date(b.visit.date).getTime() - new Date(a.visit.date).getTime());
   };
 
   const getTotalSpent = (clientId: string) => {
-    const clientPayments = appointments
-      .filter(apt => apt.clientId === clientId)
-      .map(apt => payments.find(p => p.appointmentId === apt.id))
+    const clientPayments = visits
+      .filter(visit => visit.clientId === clientId)
+      .map(visit => payments.find(p => p.visitId === visit.id))
       .filter(Boolean) as Payment[];
     
     return clientPayments.reduce((sum, payment) => sum + payment.amount, 0);
+  };
+
+  const getVisitCount = (clientId: string) => {
+    return visits.filter(visit => visit.clientId === clientId).length;
   };
 
   const formatCurrency = (value: number) => {
@@ -133,7 +137,7 @@ const ClientsSection = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {clients.map(client => {
           const totalSpent = getTotalSpent(client.id);
-          const totalAppointments = appointments.filter(apt => apt.clientId === client.id).length;
+          const visitCount = getVisitCount(client.id);
 
           return (
             <Card key={client.id} className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -157,7 +161,7 @@ const ClientsSection = ({
                 <div className="flex justify-between items-center pt-2">
                   <div className="text-sm">
                     <p className="font-medium text-green-600">{formatCurrency(totalSpent)}</p>
-                    <p className="text-gray-500">{totalAppointments} atendimentos</p>
+                    <p className="text-gray-500">{visitCount} visitas</p>
                   </div>
                   <Button 
                     variant="outline" 
@@ -208,9 +212,9 @@ const ClientsSection = ({
                   <CardContent className="p-4 text-center">
                     <Calendar className="h-8 w-8 mx-auto text-blue-600 mb-2" />
                     <p className="text-2xl font-bold text-blue-600">
-                      {appointments.filter(apt => apt.clientId === selectedClient.id).length}
+                      {getVisitCount(selectedClient.id)}
                     </p>
-                    <p className="text-sm text-gray-500">Atendimentos</p>
+                    <p className="text-sm text-gray-500">Visitas</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -223,22 +227,18 @@ const ClientsSection = ({
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold mb-3">Histórico de Atendimentos</h3>
+                <h3 className="text-lg font-semibold mb-3">Histórico de Visitas</h3>
                 <div className="space-y-2">
-                  {getClientHistory(selectedClient.id).map(({ appointment, service, payment }) => (
-                    <Card key={appointment.id}>
+                  {getClientHistory(selectedClient.id).map(({ visit, service, payment }) => (
+                    <Card key={visit.id}>
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start">
                           <div className="space-y-1">
                             <p className="font-medium">{service?.name}</p>
                             <p className="text-sm text-gray-600">
-                              {new Date(appointment.date).toLocaleDateString('pt-BR')} às {appointment.time}
+                              {new Date(visit.date).toLocaleDateString('pt-BR')} às {visit.time}
                             </p>
                             <div className="flex items-center gap-2">
-                              <Badge variant={appointment.status === "completed" ? "default" : "secondary"}>
-                                {appointment.status === "completed" ? "Concluído" : 
-                                 appointment.status === "scheduled" ? "Agendado" : "Cancelado"}
-                              </Badge>
                               {payment && (
                                 <div className="flex items-center gap-2">
                                   <Badge variant="outline">
@@ -257,6 +257,9 @@ const ClientsSection = ({
                                 </div>
                               )}
                             </div>
+                            {visit.notes && (
+                              <p className="text-sm text-gray-500 italic">{visit.notes}</p>
+                            )}
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-green-600">
@@ -268,7 +271,7 @@ const ClientsSection = ({
                     </Card>
                   ))}
                   {getClientHistory(selectedClient.id).length === 0 && (
-                    <p className="text-gray-500 text-center py-4">Nenhum atendimento registrado</p>
+                    <p className="text-gray-500 text-center py-4">Nenhuma visita registrada</p>
                   )}
                 </div>
               </div>
